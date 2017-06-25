@@ -20,13 +20,13 @@ type Timestamp struct {
 }
 
 type Log struct {
-	entry    Entry
-	messages []string
+	Entry    Entry    `json:"entry"`
+	Messages []string `json:"messages"`
 }
 
 func (l *Log) Info(message string) {
 	m := strings.Replace(message, "\n", "", -1)
-	l.messages = append(l.messages, m)
+	l.Messages = append(l.Messages, m)
 }
 
 func (l *Log) Flush() {
@@ -39,16 +39,16 @@ func (l *Log) Flush() {
 }
 
 func (l *Log) flush() ([]byte, error) {
-	b, err := json.Marshal(l.messages)
+	b, err := json.Marshal(l.Messages)
 	if err == nil {
-		l.entry.Message = string(b)
+		l.Entry.Message = string(b)
 	} else {
 		return nil, err
 	}
 
-	b, err = json.Marshal(l.entry)
+	b, err = json.Marshal(l.Entry)
 	if err == nil {
-		l.messages = nil
+		l.Messages = nil
 	}
 	return b, err
 }
@@ -56,7 +56,7 @@ func (l *Log) flush() ([]byte, error) {
 func Start() Log {
 	now := time.Now()
 	return Log{
-		entry: Entry{
+		Entry: Entry{
 			Timestamp: Timestamp{
 				Seconds: now.Unix(),
 				Nanos:   now.Nanosecond(),
