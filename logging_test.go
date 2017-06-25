@@ -15,7 +15,7 @@ func TestAddLogMessage(t *testing.T) {
 		t.Fatalf("log.entry.Timestamp.Nanos is Zero")
 	}
 
-	messages := []string{"Hello Logging", "Hello Logging Again !"}
+	messages := []string{"Good morning Logging", "Hello Logging", "Good evening"}
 	for i, m := range messages {
 		log.Info(m)
 		if len(log.Messages) != i+1 {
@@ -30,7 +30,13 @@ func TestAddLogMessage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("log.flush() err. err = %s", err.Error())
 	}
+	if strings.Contains(string(b), "Good morning") == false {
+		t.Fatalf("output json not contains Good morning")
+	}
 	if strings.Contains(string(b), "Hello") == false {
-		t.Fatalf("output json not contains messages")
+		t.Fatalf("output json not contains Hello")
+	}
+	if strings.Contains(string(b), "Good evening") == false {
+		t.Fatalf("output json not contains Good evening")
 	}
 }

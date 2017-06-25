@@ -38,6 +38,10 @@ func (l *Log) Flush() {
 	fmt.Printf("%s\n", j)
 }
 
+func (l *Log) Sample() {
+	fmt.Printf("%s\n", "slog Sample Log")
+}
+
 func (l *Log) flush() ([]byte, error) {
 	b, err := json.Marshal(l.Messages)
 	if err == nil {
