@@ -35,7 +35,7 @@ func (l *Log) Flush() {
 		fmt.Println(err.Error())
 		return
 	}
-	fmt.Printf("%s\n", j)
+	fmt.Printf("%s\n", string(j))
 }
 
 func (l *Log) Sample() {
