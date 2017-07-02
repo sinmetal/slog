@@ -1,42 +1,83 @@
 package slog
 
 import (
-	"strings"
-	"testing"
+	"fmt"
+	"time"
 )
 
-func TestAddLogMessage(t *testing.T) {
-	log := Start()
-	if log.Entry.Timestamp.Seconds == 0 {
-		t.Fatalf("log.entry.Timestamp.Seconds is Zero")
-	}
+func Example() {
+	//if e, g := 1, len(log.Messages); e != g {
+	//	t.Fatalf("log.messages.len expected %d; got %d", e, g)
+	//}
+	//
+	//if e, g := "Hello slog World", log.Messages[0]; e != g {
+	//	t.Fatalf("log.messages[0] expected %s; got %s", e, g)
+	//}
+}
 
-	if log.Entry.Timestamp.Nanos == 0 {
-		t.Fatalf("log.entry.Timestamp.Nanos is Zero")
-	}
-
-	messages := []string{"Good morning Logging", "Hello Logging", "Good evening"}
-	for i, m := range messages {
-		log.Info(m)
-		if len(log.Messages) != i+1 {
-			t.Fatalf("unexpected log.messages.len. %d != %d", len(log.Messages), i)
-		}
-		if log.Messages[i] != m {
-			t.Fatalf("unexpected log.messages. %s != %s", log.Messages[i], m)
-		}
-	}
-
-	b, err := log.flush()
+func ExampleLog_Infof() {
+	loc, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
-		t.Fatalf("log.flush() err. err = %s", err.Error())
+		fmt.Println(err.Error())
+		return
 	}
-	if strings.Contains(string(b), "Good morning") == false {
-		t.Fatalf("output json not contains Good morning")
+	log := Start(time.Date(2017, time.April, 1, 13, 15, 30, 45, loc))
+	log.Infof("Hello World %d", 1)
+	log.Infof("Hello World %d", 2)
+	log.Flush()
+	// Output: {"timestamp":{"seconds":1491020130,"nanos":45},"message":"[\"Hello World 1\",\"Hello World 2\"]","severity":"INFO","thread":1491020130000000045}
+}
+
+func ExampleLog_Info() {
+	loc, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
 	}
-	if strings.Contains(string(b), "Hello") == false {
-		t.Fatalf("output json not contains Hello")
+	log := Start(time.Date(2017, time.April, 1, 13, 15, 30, 45, loc))
+	log.Info("Hello World 1")
+	log.Info("Hello World 2")
+	log.Flush()
+	// Output: {"timestamp":{"seconds":1491020130,"nanos":45},"message":"[\"Hello World 1\",\"Hello World 2\"]","severity":"INFO","thread":1491020130000000045}
+}
+
+func ExampleLog_Errorf() {
+	loc, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
 	}
-	if strings.Contains(string(b), "Good evening") == false {
-		t.Fatalf("output json not contains Good evening")
+	log := Start(time.Date(2017, time.April, 1, 13, 15, 30, 45, loc))
+	log.Errorf("Hello World %d", 1)
+	log.Errorf("Hello World %d", 2)
+	log.Flush()
+	// Output: {"timestamp":{"seconds":1491020130,"nanos":45},"message":"[\"Hello World 1\",\"Hello World 2\"]","severity":"ERROR","thread":1491020130000000045}
+}
+
+func ExampleLog_Error() {
+	loc, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
 	}
+	log := Start(time.Date(2017, time.April, 1, 13, 15, 30, 45, loc))
+	log.Error("Hello World 1")
+	log.Error("Hello World 2")
+	log.Flush()
+	// Output: {"timestamp":{"seconds":1491020130,"nanos":45},"message":"[\"Hello World 1\",\"Hello World 2\"]","severity":"ERROR","thread":1491020130000000045}
+}
+
+// ExampleLog_Error2 is Error Levelが優先されることを確認
+func ExampleLog_Error_level() {
+	loc, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	log := Start(time.Date(2017, time.April, 1, 13, 15, 30, 45, loc))
+	log.Info("Hello Info")
+	log.Error("Hello Error")
+	log.Info("Hello Info")
+	log.Flush()
+	// Output: {"timestamp":{"seconds":1491020130,"nanos":45},"message":"[\"Hello Info\",\"Hello Error\",\"Hello Info\"]","severity":"ERROR","thread":1491020130000000045}
 }
