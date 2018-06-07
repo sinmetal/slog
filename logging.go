@@ -1,19 +1,20 @@
 package slog
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
 
 // Entry is Stackdriver Logging Entry
 type Entry struct {
-	Timestamp Timestamp `json:"timestamp"`
-	Message   string    `json:"message"`
-	Severity  string    `json:"severity"`
-	severity  Severity
-	Thread    int64 `json:"thread"`
+	Timestamp   time.Time `json:"timestamp"`
+	Severity    string    `json:"severity"`
+	severity    Severity
+	JSONPayload interface{} `json:"jsonPayload"`
 }
 
 // Timestamp is Stackdriver Logging Timestamp
@@ -79,7 +80,7 @@ func (l *Log) setSeverity(severity Severity) {
 func (l *Log) flush() ([]byte, error) {
 	b, err := json.Marshal(l.Messages)
 	if err == nil {
-		l.Entry.Message = string(b)
+		// l.Entry.Message = string(b)
 	} else {
 		return nil, err
 	}
@@ -91,15 +92,47 @@ func (l *Log) flush() ([]byte, error) {
 	return b, err
 }
 
-// Start is Start Logger
-func Start(now time.Time) Log {
-	return Log{
-		Entry: Entry{
-			Timestamp: Timestamp{
-				Seconds: now.Unix(),
-				Nanos:   now.Nanosecond(),
+var logMap map[context.Context]*Log
+
+func init() {
+	logMap = make(map[context.Context]*Log)
+}
+
+// Info is output info level Log
+func Info(ctx context.Context, message string) {
+	e, ok := logMap[ctx]
+	if !ok {
+		e = &Log{
+			Entry: Entry{
+				Severity:  "INFO",
+				Timestamp: time.Now(),
 			},
-			Thread: now.UnixNano(),
-		},
+			Messages: []string{},
+		}
+		go log(ctx)
 	}
+	e.Messages = append(e.Messages, message)
+	logMap[ctx] = e
+}
+
+func log(ctx context.Context) {
+	fmt.Println("log start")
+	select {
+	case <-ctx.Done():
+		fmt.Println("log ctx.Done()")
+		e, ok := logMap[ctx]
+		if ok {
+			fmt.Println("log ctx.Done() logMap ok;")
+			encoder := json.NewEncoder(os.Stdout)
+			e.Entry.JSONPayload = e.Messages
+			if err := encoder.Encode(e.Entry); err != nil {
+				_, err := os.Stderr.WriteString(err.Error())
+				if err != nil {
+					panic(err)
+				}
+			}
+			fmt.Println("log ctx.Done() logMap ok; done.")
+		}
+	}
+	fmt.Println("log end")
 }
