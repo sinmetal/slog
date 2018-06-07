@@ -6,13 +6,19 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 )
 
 // Entry is Stackdriver Logging Entry
 type Entry struct {
-	LogName     string            `json:"logName"`
-	Resource    MonitoredResource `json:"resource"`
-	JSONPayload interface{}       `json:"jsonPayload"`
+	InsertID         string            `json:"insertId"`
+	Severity         string            `json:"severity"`
+	Labels           map[string]string `json:"labels"`
+	LogName          string            `json:"logName"`
+	ReceiveTimestamp time.Time         `json:"receiveTimestamp"`
+	Resource         MonitoredResource `json:"resource"`
+	JSONPayload      interface{}       `json:"jsonPayload"`
+	Timestamp        time.Time         `json:"timestamp"`
 }
 
 // MonitoredResource is Log Resource
@@ -54,14 +60,19 @@ func getLogMap(ctx context.Context) (*Log, bool) {
 func Info(ctx context.Context, message string) {
 	e, ok := getLogMap(ctx)
 	if !ok {
+		labels := map[string]string{"hoge": "fuga"}
 		e = &Log{
 			Entry: Entry{
-				LogName: "projects/metal-tile-dev1/logs/slog",
+				InsertID:         time.Now().String(),
+				Labels:           labels,
+				LogName:          "projects/metal-tile-dev1/logs/slog",
+				ReceiveTimestamp: time.Now(),
 				Resource: MonitoredResource{
-					Type: "slog",
+					Type:   "slog",
+					Labels: labels,
 				},
-				//Severity:  "INFO",
-				//Timestamp: time.Now(),
+				Severity:  "WARNING",
+				Timestamp: time.Now(),
 			},
 		}
 		go log(ctx)
