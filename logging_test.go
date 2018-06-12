@@ -40,6 +40,33 @@ func handleLog(message string) {
 	Info(ctx, fmt.Sprintf("Hello %s 2", message))
 }
 
+func TestLog_InfoWithCancel(t *testing.T) {
+	//loc, err := time.LoadLocation("Asia/Tokyo")
+	//if err != nil {
+	//	fmt.Println(err.Error())
+	//	return
+	//}
+	{
+		handleLogWithCancel("First")
+	}
+	{
+		handleLogWithCancel("Second")
+	}
+
+	// Output: {"insertId":"2018-06-12 09:08:58.07136086 +0900 JST m=+0.000586925","severity":"WARNING","labels":{"hoge":"fuga"},"logName":"projects/metal-tile-dev1/logs/slog","receiveTimestamp":"2018-06-12T09:08:58.071473299+09:00","resource":{"type":"slog","labels":{"hoge":"fuga"}},"jsonPayload":["Hello First 1","Hello First 2"],"timestamp":"2018-06-12T09:08:58.07147335+09:00"}
+}
+
+func handleLogWithCancel(message string) {
+	ctx := context.Background()
+	ctx = WithLog(ctx)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	defer Flush(ctx)
+	Info(ctx, fmt.Sprintf("Hello WithCancel %s 1", message))
+	cancel()
+	Info(ctx, fmt.Sprintf("Hello WithCancel %s 2", message))
+}
+
 //func ExampleLog_Infof() {
 //	loc, err := time.LoadLocation("Asia/Tokyo")
 //	if err != nil {
