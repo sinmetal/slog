@@ -38,6 +38,11 @@ type contextLogKey struct{}
 // WithLog is context.ValueにLogを入れたものを返す
 // Log周期開始時に利用する
 func WithLog(ctx context.Context) context.Context {
+	_, ok := ctx.Value(contextLogKey{}).(*Log)
+	if ok {
+		return ctx
+	}
+
 	labels := map[string]string{"hoge": "fuga"}
 	l := &Log{
 		Entry: Entry{
