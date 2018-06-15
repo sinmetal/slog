@@ -36,8 +36,9 @@ func handleLog(message string) {
 	ctx := context.Background()
 	ctx = WithLog(ctx)
 	defer Flush(ctx)
-	Info(ctx, fmt.Sprintf("Hello %s 1", message))
-	Info(ctx, fmt.Sprintf("Hello %s 2", message))
+	Info(ctx, "handleLog", KV{"message", fmt.Sprintf("Hello %s 1", message)})
+	Info(ctx, "handleLog", fmt.Sprintf("Hello %s 2", message))
+	Info(ctx, "handleLog", KV{"message", 3})
 }
 
 func TestLog_InfoWithCancel(t *testing.T) {
@@ -62,9 +63,9 @@ func handleLogWithCancel(message string) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	defer Flush(ctx)
-	Info(ctx, fmt.Sprintf("Hello WithCancel %s 1", message))
+	Info(ctx, "handleLogWithCancel", fmt.Sprintf("Hello WithCancel %s 1", message))
 	cancel()
-	Info(ctx, fmt.Sprintf("Hello WithCancel %s 2", message))
+	Info(ctx, "handleLogWithCancel", fmt.Sprintf("Hello WithCancel %s 2", message))
 }
 
 //func ExampleLog_Infof() {
