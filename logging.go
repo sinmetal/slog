@@ -11,7 +11,6 @@ import (
 // StackdriverLogEntry is Stackdriver Logging Entry
 type StackdriverLogEntry struct {
 	Severity string `json:"severity"`
-	InsertID string `json:"insertId"`
 	LogName  string `json:"logName"`
 	Lines    []Line `json:"lines"`
 }
