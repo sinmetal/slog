@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 )
 
 // StackdriverLogEntry is Stackdriver Logging Entry
 type StackdriverLogEntry struct {
-	Severity string `json:"severity"`
-	LogName  string `json:"logName"`
-	Lines    []Line `json:"lines"`
+	Severity    string  `json:"severity"`
+	LogName     string  `json:"logName"`
+	Lines       []Line  `json:"lines"`
+	FlushCaller *Caller `json:"flushCaller"`
 }
 
 // Line is Application Log Entry
@@ -28,6 +30,13 @@ type Line struct {
 type KV struct {
 	Key   string      `json:"key"`
 	Value interface{} `json:"value"`
+}
+
+// Caller is 関数を呼び出したファイルや行数, 関数名を収めるstruct
+type Caller struct {
+	File string `json:"file"`
+	Line int    `json:"line"`
+	Func string `json:"func"`
 }
 
 type contextLogKey struct{}
@@ -79,6 +88,17 @@ func Info(ctx context.Context, name string, body interface{}) {
 func Flush(ctx context.Context) {
 	l, ok := ctx.Value(contextLogKey{}).(*StackdriverLogEntry)
 	if ok {
+		pt, file, line, ok := runtime.Caller(1)
+		if !ok {
+			fmt.Println("スタックトレースの取得失敗")
+			return
+		}
+		funcName := runtime.FuncForPC(pt).Name()
+		l.FlushCaller = &Caller{
+			File: file,
+			Line: line,
+			Func: funcName,
+		}
 		encoder := json.NewEncoder(os.Stdout)
 		if err := encoder.Encode(l); err != nil {
 			_, err := os.Stdout.WriteString(err.Error())
