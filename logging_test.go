@@ -32,6 +32,13 @@ func TestLog_Info(t *testing.T) {
 	// Output: {"insertId":"2018-06-12 09:08:58.07136086 +0900 JST m=+0.000586925","severity":"WARNING","labels":{"hoge":"fuga"},"logName":"projects/metal-tile-dev1/logs/slog","receiveTimestamp":"2018-06-12T09:08:58.071473299+09:00","resource":{"type":"slog","labels":{"hoge":"fuga"}},"jsonPayload":["Hello First 1","Hello First 2"],"timestamp":"2018-06-12T09:08:58.07147335+09:00"}
 }
 
+// TestLog_Empty is ログが空っぽの場合は出力しないことを確認
+func TestLog_Empty(t *testing.T) {
+	ctx := context.Background()
+	ctx = WithLog(ctx)
+	defer Flush(ctx)
+}
+
 func handleLog(message string) {
 	ctx := context.Background()
 	ctx = WithLog(ctx)

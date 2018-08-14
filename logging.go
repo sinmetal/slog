@@ -88,6 +88,10 @@ func Info(ctx context.Context, name string, body interface{}) {
 func Flush(ctx context.Context) {
 	l, ok := ctx.Value(contextLogKey{}).(*StackdriverLogEntry)
 	if ok {
+		if len(l.Lines) < 1 {
+			return
+		}
+
 		pt, file, line, ok := runtime.Caller(1)
 		if !ok {
 			fmt.Println("スタックトレースの取得失敗")
