@@ -65,19 +65,38 @@ func SetLogName(ctx context.Context, logName string) {
 	l.LogName = logName
 }
 
+// Debug is output info level Log
+func Debug(ctx context.Context, name string, body interface{}) {
+	log(ctx, "DEBUG", name, body)
+}
+
 // Info is output info level Log
 func Info(ctx context.Context, name string, body interface{}) {
+	log(ctx, "INFO", name, body)
+}
+
+// Warning is output info level Log
+func Warning(ctx context.Context, name string, body interface{}) {
+	log(ctx, "WARNING", name, body)
+}
+
+// Error is output info level Log
+func Error(ctx context.Context, name string, body interface{}) {
+	log(ctx, "ERROR", name, body)
+}
+
+func log(ctx context.Context, logLevel string, name string, body interface{}) {
 	l, ok := ctx.Value(contextLogKey{}).(*StackdriverLogEntry)
 	if !ok {
 		panic(fmt.Sprintf("not contain log. body = %+v", body))
 	}
-	l.Severity = maxSeverity(l.Severity, "INFO")
+	l.Severity = maxSeverity(l.Severity, logLevel)
 	b, err := json.Marshal(body)
 	if err != nil {
 		panic(err)
 	}
 	l.Lines = append(l.Lines, Line{
-		Severity:  "INFO",
+		Severity:  logLevel,
 		Name:      name,
 		Body:      string(b),
 		Timestamp: time.Now(),
@@ -133,6 +152,7 @@ func maxSeverity(severities ...string) (severity string) {
 		}
 		if lv > level {
 			severity = s
+			level = lv
 		}
 	}
 

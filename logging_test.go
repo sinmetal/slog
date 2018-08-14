@@ -39,6 +39,25 @@ func TestLog_Empty(t *testing.T) {
 	defer Flush(ctx)
 }
 
+// TestLogLevel is LogLevelがWarningになることを確認
+func TestLogLevel(t *testing.T) {
+	ctx := context.Background()
+	ctx = WithLog(ctx)
+	defer Flush(ctx)
+
+	SetLogName(ctx, "Test Log Level")
+	Warning(ctx, "Hoge", "Fuga")
+	Info(ctx, "Hoge", "Fuga")
+
+	l, ok := ctx.Value(contextLogKey{}).(*StackdriverLogEntry)
+	if !ok {
+		t.Errorf("failed get Log")
+	}
+	if e, g := "WARNING", l.Severity; e != g {
+		t.Errorf("expected Severity is %s; got %s", e, g)
+	}
+}
+
 func handleLog(message string) {
 	ctx := context.Background()
 	ctx = WithLog(ctx)
@@ -141,3 +160,12 @@ func handleLogWithCancel(message string) {
 //	log.Flush()
 //	// Output: {"timestamp":{"seconds":1491020130,"nanos":45},"message":"[\"Hello Info\",\"Hello Error\",\"Hello Info\"]","severity":"ERROR","thread":1491020130000000045}
 //}
+
+func Test_maxSeverity(t *testing.T) {
+	if e, g := "WARNING", maxSeverity("INFO", "WARNING"); e != g {
+		t.Errorf("expected Severity is %s; got %s", e, g)
+	}
+	if e, g := "WARNING", maxSeverity("WARNING", "INFO"); e != g {
+		t.Errorf("expected Severity is %s; got %s", e, g)
+	}
+}
