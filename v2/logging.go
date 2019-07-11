@@ -65,12 +65,12 @@ func WithValue(ctx context.Context) context.Context {
 }
 
 // WithValueForHTTP is WithValue for HTTP Request
-func WithValueForHTTP(ctx context.Context, r http.Request) context.Context {
+func WithValueForHTTP(ctx context.Context, r *http.Request) context.Context {
 	now := dogtime.Now()
 	lc := createLogContainer(now)
 	lc.Entry.HTTPRequest = &HTTPRequest{
 		RequestMethod: r.Method,
-		RequestURL:    r.URL.RawPath,
+		RequestURL:    r.RequestURI,
 		UserAgent:     r.UserAgent(),
 		RemoteIP:      r.RemoteAddr,
 		Referer:       r.Referer(),

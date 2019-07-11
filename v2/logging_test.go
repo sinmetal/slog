@@ -3,7 +3,6 @@ package v2_test
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"testing"
 	"time"
 
@@ -26,14 +25,10 @@ func ExampleForHTTP() {
 	now := time.Date(2019, 1, 2, 3, 4, 5, 6, time.UTC)
 	sn.AddStockTime(now)
 
-	r := http.Request{
-		Method: "GET",
-		URL: &url.URL{
-			Host:    "sinmetal.jp",
-			Path:    "/api/v1/hoge",
-			RawPath: "/api/v1/hoge",
-		},
-		Proto: "HTTP 1.1",
+	r := &http.Request{
+		Method:     "GET",
+		RequestURI: "/api/v1/hoge",
+		Proto:      "HTTP 1.1",
 	}
 
 	ctx := slog.WithValueForHTTP(context.Background(), r)
