@@ -38,7 +38,10 @@ func ExampleForHTTP() {
 	}
 	slog.Info(ctx, slog.KV{"hoge", "fuga"})
 
-	slog.FlushWithHTTPResponse(ctx, 200)
+	var status *int
+	var statusOK int = 200
+	status = &statusOK
+	slog.FlushWithHTTPResponse(ctx, status) // 実際使う時はpointerを渡す必要がある
 	// Output: {"timestamp":{"seconds":1546398245,"nanos":6},"messages":["{\"key\":\"hoge\",\"value\":\"fuga\"}"],"httpRequest":{"requestMethod":"GET","requestUrl":"/api/v1/hoge","status":200,"protocol":"HTTP 1.1"}}
 }
 

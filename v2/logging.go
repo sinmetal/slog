@@ -106,7 +106,7 @@ func Flush(ctx context.Context) {
 	fmt.Println(string(j))
 }
 
-func FlushWithHTTPResponse(ctx context.Context, status int) {
+func FlushWithHTTPResponse(ctx context.Context, status *int) {
 	l, ok := Value(ctx)
 	if !ok {
 		log.Print("failed FlushWithHTTPResponse. Logging.context not include LogContainer\n")
@@ -116,7 +116,7 @@ func FlushWithHTTPResponse(ctx context.Context, status int) {
 		log.Print("failed FlushWithHTTPResponse. HttpRequest is nil\n")
 		return
 	}
-	l.Entry.HTTPRequest.Status = status
+	l.Entry.HTTPRequest.Status = *status
 
 	j, err := json.Marshal(l.Entry)
 	if err != nil {
