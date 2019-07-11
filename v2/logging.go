@@ -17,9 +17,9 @@ const contextKey = "SINMETAL_SLOG"
 type LogEntry struct {
 	Timestamp   Timestamp `json:"timestamp"`
 	Messages    []string  `json:"messages"`
-	Severity    string    `json:"severity"`
+	Severity    string    `json:"severity,omitempty"`
 	severity    Severity
-	HttpRequest HttpRequest `json:"httpRequest"`
+	HTTPRequest *HTTPRequest `json:"httpRequest,omitempty"`
 }
 
 // Timestamp is Stackdriver Logging Timestamp
@@ -28,8 +28,23 @@ type Timestamp struct {
 	Nanos   int   `json:"nanos"`
 }
 
-type HttpRequest struct {
-	RequestURL string `json:"requestUrl"`
+// HTTPRequest provides HTTPRequest log.
+// spec: https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#httprequest
+type HTTPRequest struct {
+	RequestMethod                  string `json:"requestMethod"`
+	RequestURL                     string `json:"requestUrl"`
+	RequestSize                    int64  `json:"requestSize,string,omitempty"`
+	Status                         int    `json:"status,omitempty"`
+	ResponseSize                   int64  `json:"responseSize,string,omitempty"`
+	UserAgent                      string `json:"userAgent,omitempty"`
+	RemoteIP                       string `json:"remoteIp,omitempty"`
+	Referer                        string `json:"referer,omitempty"`
+	Latency                        string `json:"latency,omitempty"`
+	CacheLookup                    *bool  `json:"cacheLookup,omitempty"`
+	CacheHit                       *bool  `json:"cacheHit,omitempty"`
+	CacheValidatedWithOriginServer *bool  `json:"cacheValidatedWithOriginServer,omitempty"`
+	CacheFillBytes                 *int64 `json:"cacheFillBytes,string,omitempty"`
+	Protocol                       string `json:"protocol"`
 }
 
 // LogContainer is Log Object
@@ -53,8 +68,13 @@ func WithValue(ctx context.Context) context.Context {
 func WithValueForHTTP(ctx context.Context, r http.Request) context.Context {
 	now := dogtime.Now()
 	lc := createLogContainer(now)
-	lc.Entry.HttpRequest = HttpRequest{
-		RequestURL: r.URL.RawPath,
+	lc.Entry.HTTPRequest = &HTTPRequest{
+		RequestMethod: r.Method,
+		RequestURL:    r.URL.RawPath,
+		UserAgent:     r.UserAgent(),
+		RemoteIP:      r.RemoteAddr,
+		Referer:       r.Referer(),
+		Protocol:      r.Proto,
 	}
 	return context.WithValue(ctx, contextKey, lc)
 }
@@ -78,6 +98,25 @@ func Flush(ctx context.Context) {
 		log.Print("failed Flush Logging.context not include LogContainer\n")
 		return
 	}
+
+	j, err := json.Marshal(l.Entry)
+	if err != nil {
+		log.Printf("failed LogContainer to json.err=%+v,LogContainer=%+v\n", err, l)
+	}
+	fmt.Println(string(j))
+}
+
+func FlushWithHTTPResponse(ctx context.Context, status int) {
+	l, ok := Value(ctx)
+	if !ok {
+		log.Print("failed FlushWithHTTPResponse. Logging.context not include LogContainer\n")
+		return
+	}
+	if l.Entry.HTTPRequest == nil {
+		log.Print("failed FlushWithHTTPResponse. HttpRequest is nil\n")
+		return
+	}
+	l.Entry.HTTPRequest.Status = status
 
 	j, err := json.Marshal(l.Entry)
 	if err != nil {
