@@ -25,7 +25,7 @@ func TestInfo(t *testing.T) {
 		t.Error("want ok but ng...")
 	}
 
-	if e, g := 1, len(lc.Messages); e != g {
+	if e, g := 1, len(lc.Entry.Messages); e != g {
 		t.Errorf("Messages.length want %v but got %v", e, g)
 	}
 }
@@ -40,5 +40,5 @@ func ExampleInfo() {
 	ctx := slog.WithValue(context.Background())
 	slog.Info(ctx, slog.KV{"hoge", "fuga"})
 	slog.Flush(ctx)
-	// Output: {"timestamp":{"seconds":1546398245,"nanos":6},"message":"[\"{\\\"key\\\":\\\"hoge\\\",\\\"value\\\":\\\"fuga\\\"}\"]","severity":"","thread":1546398245000000006,"httpRequest":{"requestUrl":""}}
+	// Output: {"timestamp":{"seconds":1546398245,"nanos":6},"messages":["{\"key\":\"hoge\",\"value\":\"fuga\"}"],"severity":"","httpRequest":{"requestUrl":""}}
 }

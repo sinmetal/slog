@@ -16,10 +16,9 @@ const contextKey = "SINMETAL_SLOG"
 // LogEntry is Stackdriver Logging Entry
 type LogEntry struct {
 	Timestamp   Timestamp `json:"timestamp"`
-	Message     string    `json:"message"`
+	Messages    []string  `json:"messages"`
 	Severity    string    `json:"severity"`
 	severity    Severity
-	Thread      int64       `json:"thread"`
 	HttpRequest HttpRequest `json:"httpRequest"`
 }
 
@@ -35,8 +34,7 @@ type HttpRequest struct {
 
 // LogContainer is Log Object
 type LogContainer struct {
-	Entry    LogEntry `json:"entry"`
-	Messages []string `json:"messages"`
+	Entry LogEntry `json:"entry"`
 }
 
 type KV struct {
@@ -81,14 +79,6 @@ func Flush(ctx context.Context) {
 		return
 	}
 
-	{
-		j, err := json.Marshal(l.Messages)
-		if err != nil {
-			log.Printf("failed LogContainer.Messages to json.err=%+v,message=%+v\n", err, l.Messages)
-		}
-		l.Entry.Message = string(j)
-	}
-
 	j, err := json.Marshal(l.Entry)
 	if err != nil {
 		log.Printf("failed LogContainer to json.err=%+v,LogContainer=%+v\n", err, l)
@@ -107,7 +97,7 @@ func Info(ctx context.Context, message interface{}) {
 		log.Printf("failed Info Logging.context not include LogContainer.message=%+v\n", message)
 		return
 	}
-	l.Messages = append(l.Messages, string(j))
+	l.Entry.Messages = append(l.Entry.Messages, string(j))
 }
 
 func createLogContainer(now time.Time) *LogContainer {
@@ -117,7 +107,6 @@ func createLogContainer(now time.Time) *LogContainer {
 				Seconds: now.Unix(),
 				Nanos:   now.Nanosecond(),
 			},
-			Thread: now.UnixNano(),
 		},
 	}
 }
