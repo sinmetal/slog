@@ -40,5 +40,5 @@ func ExampleInfo() {
 	ctx := slog.WithValue(context.Background())
 	slog.Info(ctx, slog.KV{"hoge", "fuga"})
 	slog.Flush(ctx)
-	// Output: {"entry":{"timestamp":{"seconds":1546398245,"nanos":6},"message":"[\"{\\\"key\\\":\\\"hoge\\\",\\\"value\\\":\\\"fuga\\\"}\"]","severity":"","thread":1546398245000000006,"httpRequest":{"requestUrl":""}},"messages":["{\"key\":\"hoge\",\"value\":\"fuga\"}"]}
+	// Output: {"timestamp":{"seconds":1546398245,"nanos":6},"message":"[\"{\\\"key\\\":\\\"hoge\\\",\\\"value\\\":\\\"fuga\\\"}\"]","severity":"","thread":1546398245000000006,"httpRequest":{"requestUrl":""}}
 }

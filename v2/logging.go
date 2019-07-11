@@ -89,7 +89,7 @@ func Flush(ctx context.Context) {
 		l.Entry.Message = string(j)
 	}
 
-	j, err := json.Marshal(l)
+	j, err := json.Marshal(l.Entry)
 	if err != nil {
 		log.Printf("failed LogContainer to json.err=%+v,LogContainer=%+v\n", err, l)
 	}
