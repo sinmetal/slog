@@ -106,7 +106,12 @@ func Flush(ctx context.Context) {
 	fmt.Println(string(j))
 }
 
-func FlushWithHTTPResponse(ctx context.Context, status *int) {
+// HTTPResponse is FlushWithHTTPResponse にHTTP Responseの状態を渡すためのstruct
+type HTTPResponse struct {
+	Status int
+}
+
+func FlushWithHTTPResponse(ctx context.Context, response *HTTPResponse) {
 	l, ok := Value(ctx)
 	if !ok {
 		log.Print("failed FlushWithHTTPResponse. Logging.context not include LogContainer\n")
@@ -116,7 +121,7 @@ func FlushWithHTTPResponse(ctx context.Context, status *int) {
 		log.Print("failed FlushWithHTTPResponse. HttpRequest is nil\n")
 		return
 	}
-	l.Entry.HTTPRequest.Status = *status
+	l.Entry.HTTPRequest.Status = response.Status
 
 	j, err := json.Marshal(l.Entry)
 	if err != nil {
