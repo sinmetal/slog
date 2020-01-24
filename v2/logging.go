@@ -1,4 +1,4 @@
-package v2
+package slog
 
 import (
 	"context"
@@ -8,16 +8,22 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sinmetal/gcpmetadata"
 	"github.com/sinmetal/silverdog/dogtime"
+	"go.opencensus.io/trace"
 )
 
 const contextKey = "SINMETAL_SLOG"
 
 // LogEntry is Stackdriver Logging Entry
 type LogEntry struct {
-	Timestamp   Timestamp `json:"timestamp"`
-	Messages    []string  `json:"messages"`
-	Severity    string    `json:"severity,omitempty"`
+	LogName     string            `json:"logName"`
+	Timestamp   Timestamp         `json:"timestamp"`
+	TraceID     string            `json:"trace,omitempty"`
+	SpanID      string            `json:"spanId,omitempty"`
+	Operation   LogEntryOperation `json:"operation,omitempty"`
+	Messages    []string          `json:"messages"`
+	Severity    string            `json:"severity,omitempty"`
 	severity    Severity
 	HTTPRequest *HTTPRequest `json:"httpRequest,omitempty"`
 }
@@ -47,6 +53,15 @@ type HTTPRequest struct {
 	Protocol                       string `json:"protocol"`
 }
 
+// LogEntryOperation is Additional information about a potentially long-running operation with which a log entry is associated.
+// spec: https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logentryoperation
+type LogEntryOperation struct {
+	ID       string `json:"id"`
+	Producer string `json:"producer"`
+	First    bool   `json:"first"`
+	Last     bool   `json:"last"`
+}
+
 // LogContainer is Log Object
 type LogContainer struct {
 	Entry LogEntry `json:"entry"`
@@ -68,6 +83,9 @@ func WithValue(ctx context.Context) context.Context {
 func WithValueForHTTP(ctx context.Context, r *http.Request) context.Context {
 	now := dogtime.Now()
 	lc := createLogContainer(now)
+
+	span := trace.FromContext(r.Context())
+	lc.Entry.TraceID = span.SpanContext().TraceID.String()
 	lc.Entry.HTTPRequest = &HTTPRequest{
 		RequestMethod: r.Method,
 		RequestURL:    r.RequestURI,
@@ -130,6 +148,26 @@ func FlushWithHTTPResponse(ctx context.Context, response *HTTPResponse) {
 	fmt.Println(string(j))
 }
 
+func SetTraceID(ctx context.Context, traceID string) {
+	l, ok := Value(ctx)
+	if !ok {
+		log.Print("failed SetTraceID Logging.context not include LogContainer\n")
+		return
+	}
+
+	l.Entry.TraceID = traceID
+}
+
+func SetSpanID(ctx context.Context, spanID string) {
+	l, ok := Value(ctx)
+	if !ok {
+		log.Print("failed SetSpanID Logging.context not include LogContainer\n")
+		return
+	}
+
+	l.Entry.SpanID = spanID
+}
+
 func Info(ctx context.Context, message interface{}) {
 	j, err := json.Marshal(message)
 	if err != nil {
@@ -145,8 +183,13 @@ func Info(ctx context.Context, message interface{}) {
 }
 
 func createLogContainer(now time.Time) *LogContainer {
+	project, err := gcpmetadata.GetProjectID()
+	if err != nil {
+		panic(err)
+	}
 	return &LogContainer{
 		Entry: LogEntry{
+			LogName: fmt.Sprintf("projects/%s/logs/slog", project),
 			Timestamp: Timestamp{
 				Seconds: now.Unix(),
 				Nanos:   now.Nanosecond(),

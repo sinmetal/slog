@@ -1,4 +1,4 @@
-module github.com/sinmetal/slog
+module github.com/sinmetal/slog/v2
 
 go 1.12
 
