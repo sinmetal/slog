@@ -1,4 +1,4 @@
-package v2_test
+package slog_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/sinmetal/silverdog/dogtime"
-	slog "github.com/sinmetal/slog/v2"
+	"github.com/sinmetal/slog/v2"
 )
 
 func TestWithValue(t *testing.T) {

@@ -1,4 +1,4 @@
-package v2
+package slog
 
 // Severity is Stackdriver Logging Log Level
 type Severity int
